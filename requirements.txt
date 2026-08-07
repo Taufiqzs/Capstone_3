@@ -1,0 +1,8 @@
+# Apache Beam provides the transforms and managed Dataflow runner integration.
+apache-beam[gcp]==2.67.0
+# Pub/Sub client publishes generated taxi events to the streaming topic.
+google-cloud-pubsub==2.31.1
+# Cloud Storage client uploads April-May source Parquet files to GCS.
+google-cloud-storage==3.2.0
+# Pytest executes the offline unit tests for generation and validation logic.
+pytest==8.4.1

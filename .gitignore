@@ -1,0 +1,4 @@
+# Local runtime configuration can contain environment-specific values.
+.env
+# Python virtual environment contains machine-specific installed dependencies.
+.venv/
