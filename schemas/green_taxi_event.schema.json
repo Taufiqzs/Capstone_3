@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/taufiqzahrus/green_taxi_event.schema.json",
+  "title": "GreenTaxiStreamingEvent",
+  "description": "Contract for one dummy NYC Green Taxi event generated for June-July 2025 and published through Pub/Sub.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_time",
+    "ingestion_time",
+    "pickup_datetime",
+    "dropoff_datetime",
+    "pickup_location_id",
+    "dropoff_location_id",
+    "passenger_count",
+    "trip_distance",
+    "fare_amount",
+    "tip_amount",
+    "tolls_amount",
+    "total_amount",
+    "payment_type",
+    "source_type"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "Unique UUID used for at-least-once delivery deduplication.",
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_time": {
+      "description": "Historical business-event time, equal to pickup_datetime.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "ingestion_time": {
+      "description": "Actual UTC time when the Python publisher generated the event.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "pickup_datetime": {
+      "description": "Simulated pickup time from 2025-06-01 through 2025-07-31 UTC.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "dropoff_datetime": {
+      "description": "Simulated drop-off after pickup and strictly before August 2025.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "pickup_location_id": {
+      "description": "Origin NYC Taxi Zone identifier.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 265
+    },
+    "dropoff_location_id": {
+      "description": "Destination NYC Taxi Zone identifier.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 265
+    },
+    "passenger_count": {
+      "description": "Number of simulated passengers.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 6
+    },
+    "trip_distance": {
+      "description": "Positive simulated trip distance in miles.",
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "fare_amount": {
+      "description": "Nonnegative simulated base and distance fare in US dollars.",
+      "type": "number",
+      "minimum": 0
+    },
+    "tip_amount": {
+      "description": "Nonnegative simulated gratuity in US dollars.",
+      "type": "number",
+      "minimum": 0
+    },
+    "tolls_amount": {
+      "description": "Nonnegative simulated toll charge in US dollars.",
+      "type": "number",
+      "minimum": 0
+    },
+    "total_amount": {
+      "description": "Positive complete simulated passenger charge in US dollars.",
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "payment_type": {
+      "description": "Categorical payment code accepted by this project.",
+      "type": "integer",
+      "enum": [1, 2, 3, 4]
+    },
+    "source_type": {
+      "description": "Lineage marker distinguishing the generated streaming source.",
+      "const": "stream"
+    }
+  }
+}
