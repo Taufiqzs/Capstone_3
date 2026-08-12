@@ -9,8 +9,6 @@ Tidak ada informasi autentikasi atau data rahasia yang disimpan dalam file kode 
     
 """
 
-from __future__ import annotations
-
 import random
 import uuid
 from dataclasses import asdict, dataclass
@@ -114,16 +112,15 @@ class TaxiEvent:
     payment_type: int
     source_type: str = "stream"
 
-def to_dict(self) -> dict[str, object]:
-    """Mengubah event immutable menjadi dictionary yang dapat diserialisasi ke JSON.
+    def to_dict(self) -> dict[str, object]:
+        """Mengubah event menjadi dictionary yang dapat diserialisasi ke JSON.
 
-    Returns:
-        Dictionary baru dengan key yang sesuai dengan skema event Pub/Sub.
-    """
+        Returns:
+            Dictionary baru dengan key yang sesuai dengan skema event Pub/Sub.
+        """
 
-    # event_dictionary menyimpan mapping terpisah yang aman untuk diubah oleh pemanggil.
-    event_dictionary = asdict(self)
-    return event_dictionary
+        # asdict menghasilkan mapping terpisah yang aman diubah oleh pemanggil.
+        return asdict(self)
 
 
 def _rfc3339(value: datetime) -> str:

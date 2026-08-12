@@ -8,12 +8,17 @@
 # pipefail memastikan error dalam rangkaian pipe terdeteksi.
 set -euo pipefail
 
+# SCRIPT_DIR menyimpan path absolut direktori tempat script ini berada.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+# PROJECT_ROOT menyimpan path absolut direktori utama project, yaitu satu tingkat di atas direktori script.
+PROJECT_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 
 # GCP_PROJECT_ID menentukan Google Cloud project yang digunakan.
 : "${GCP_PROJECT_ID:=jcdeah-009}"
 
 # GCP_REGION menentukan region Dataflow dan lokasi resource terkait.
-: "${GCP_REGION:=us-central1}"
+: "${GCP_REGION:=asia-southeast2}"
 
 # STUDENT_ID digunakan sebagai awalan nama job agar pemilik job
 # dapat dikenali melalui Google Cloud Console.
@@ -101,15 +106,18 @@ dead_letter_table="${GCP_PROJECT_ID}:${BIGQUERY_DATASET}.stg_green_taxi_stream_d
 # Mengirim pipeline tanpa batas akhir ke Dataflow.
 # Hentikan job setelah bukti pelaksanaan proyek berhasil dikumpulkan.
 python -m dataflow.streaming_pipeline \
-    --runner=DataflowRunner \
-    --project="${GCP_PROJECT_ID}" \
-    --region="${GCP_REGION}" \
-    --job_name="${job_name}" \
-    --temp_location="gs://${GCS_BUCKET}/dataflow/temp" \
-    --staging_location="gs://${GCS_BUCKET}/dataflow/staging" \
-    --input-subscription="${input_subscription_path}" \
-    --output-table="${valid_output_table}" \
-    --dead-letter-table="${dead_letter_table}" \
-    --requirements_file=requirements.txt \
-    --max_num_workers=2 \
-    --autoscaling_algorithm=THROUGHPUT_BASED
+  --runner=DataflowRunner \
+  --project="${GCP_PROJECT_ID}" \
+  --region="${GCP_REGION}" \
+  --streaming \
+  --enable_streaming_engine \
+  --job_name="${job_name}" \
+  --temp_location="gs://${GCS_BUCKET}/dataflow/temp" \
+  --staging_location="gs://${GCS_BUCKET}/dataflow/staging" \
+  --input-subscription="${input_subscription_path}" \
+  --output-table="${valid_output_table}" \
+  --dead-letter-table="${dead_letter_table}" \
+  --requirements_file="${PROJECT_ROOT}/requirements.txt" \
+  --setup_file="${PROJECT_ROOT}/setup.py" \
+  --max_num_workers=2 \
+  --autoscaling_algorithm=THROUGHPUT_BASED

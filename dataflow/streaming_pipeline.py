@@ -240,13 +240,9 @@ def build_pipeline(
     routed_results.valid | "WriteValidBigQuery" >> beam.io.WriteToBigQuery(
         output_table,
         schema=VALID_SCHEMA,
-        create_disposition=(
-            beam.io.BigQueryDisposition.CREATE_IF_NEEDED
-        ),
-        write_disposition=(
-            beam.io.BigQueryDisposition.WRITE_APPEND
-        ),
-        method=beam.io.WriteToBigQuery.Method.STORAGE_WRITE_API,
+        create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
+        write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
+        method=beam.io.WriteToBigQuery.Method.STREAMING_INSERTS,
         additional_bq_parameters={
             # Melakukan partisi berdasarkan tanggal bisnis agar query
             # yang menggunakan filter tanggal membaca lebih sedikit data.

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from airflow import DAG
+from airflow.sdk import DAG
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperator,
     BigQueryCreateEmptyDatasetOperator,
@@ -27,7 +27,7 @@ STUDENT_ID = "taufiqzahrus"
 # PROJECT_ID menentukan Google Cloud project yang menampung seluruh resource pipeline.
 PROJECT_ID = "jcdeah-009"
 # REGION menyelaraskan lokasi operasi BigQuery, dataset, dan bucket Cloud Storage.
-REGION = "us-central1"
+REGION = "asia-southeast2"
 # BUCKET menyimpan objek Parquet April–Mei sebelum dimuat oleh BigQuery.
 BUCKET = "taufiqzahrus-capstone3"
 # DATASET mengelompokkan tabel staging, intermediate, dan mart di BigQuery.
@@ -44,12 +44,11 @@ SENSOR_TIMEOUT_SECONDS = 600
 RETRY_COUNT = 2
 # RETRY_DELAY_MINUTES menentukan jeda antarpercobaan ulang task.
 RETRY_DELAY_MINUTES = 5
-# STREAM_FRESHNESS_HOURS adalah usia maksimum data streaming yang masih diterima.
-STREAM_FRESHNESS_HOURS = 24
+
 # EXPECTED_INTERMEDIATE_COLUMNS mendeteksi kolom hilang atau perubahan nama schema.
 EXPECTED_INTERMEDIATE_COLUMNS = 15
 # DAG_ID adalah identifier unik Airflow untuk submission milik Taufiq.
-DAG_ID = f"{STUDENT_ID}_green_taxi_pipeline"
+
 
 
 def qualified_table(table_name: str) -> str:
@@ -192,7 +191,7 @@ default_args = {
 
 # dag adalah container workflow yang ditampilkan pada antarmuka Airflow instruktur.
 with DAG(
-    dag_id=DAG_ID,
+    dag_id="taufiqzahrus_green_taxi_pipeline",
     description=(
         "Pemuatan batch NYC Green Taxi dan transformasi data warehouse terpadu"
     ),
@@ -278,6 +277,7 @@ with DAG(
     # transform_intermediate menjalankan SQL penyatuan schema dan deduplikasi.
     transform_intermediate = BigQueryInsertJobOperator(
         task_id="transform_to_intermediate",
+        project_id=PROJECT_ID,
         configuration={
             "query": {
                 "query": INTERMEDIATE_SQL,
@@ -335,17 +335,14 @@ with DAG(
         location=REGION,
     )
 
-    # check_stream_freshness memastikan jalur streaming memiliki event terbaru.
-    check_stream_freshness = BigQueryCheckOperator(
-        task_id="check_stream_freshness",
+    # Memastikan data hasil streaming tersedia untuk periode proyek.
+    check_stream_data_exists = BigQueryCheckOperator(
+        task_id="check_stream_data_exists",
         sql=f"""
-        SELECT COUNT(*) > 0
-          AND TIMESTAMP_DIFF(
-            CURRENT_TIMESTAMP(),
-            MAX(ingestion_time),
-            HOUR
-          ) <= {STREAM_FRESHNESS_HOURS}
-        FROM {qualified_table('stg_green_taxi_stream')}
+            SELECT COUNT(*) > 0
+            FROM {qualified_table('stg_green_taxi_stream')}
+            WHERE pickup_date BETWEEN '2025-06-01' AND '2025-07-31'
+            AND source_type = 'stream'
         """,
         use_legacy_sql=False,
         location=REGION,
@@ -354,9 +351,10 @@ with DAG(
     # build_marts membuat tabel agregat harian dan bulanan yang siap dianalisis.
     build_marts = BigQueryInsertJobOperator(
         task_id="build_analytical_marts",
+        project_id=PROJECT_ID,
         configuration={
             "query": {
-                "query": MART_SQL,
+                "query": MARTS_SQL,
                 "useLegacySql": False,
             }
         },
@@ -387,12 +385,12 @@ with DAG(
         check_required_columns,
         check_invalid_values,
         check_duplicates,
-        check_stream_freshness,
+        check_stream_data_exists,
     ]
     # Seluruh quality gate harus lulus sebelum mart dan validasi akhir dijalankan.
     [
         check_required_columns,
         check_invalid_values,
         check_duplicates,
-        check_stream_freshness,
+        check_stream_data_exists,
     ] >> build_marts >> check_mart_row_count

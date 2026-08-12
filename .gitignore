@@ -2,3 +2,21 @@
 .env
 # Python virtual environment contains machine-specific installed dependencies.
 .venv/
+# Python bytecode and interpreter cache files are reproducible build artifacts.
+__pycache__/
+*.py[cod]
+# Test and coverage outputs are local verification artifacts.
+.pytest_cache/
+.coverage
+htmlcov/
+# Packaging outputs are generated from source and should not be committed.
+build/
+dist/
+*.egg-info/
+# Downloaded Parquet files stay in GCS instead of GitHub.
+data/*.parquet
+# Evidence screenshots may reveal cloud-console details and remain local.
+evidence/*.png
+# Credential filenames are blocked defensively; credentials must never be committed.
+service-account*.json
+*credentials*.json
